@@ -1,11 +1,12 @@
 - name: Deploy Keycloak
-  hosts: localhost
-  connection: local
+  hosts: all
   pre_tasks:
     - name: Install podman
+      become: true
       ansible.builtin.apt:
         name: podman
         state: present
+        update_cache: true
   tasks:
     - name: Make sure deployment path exists
       ansible.builtin.file:
@@ -53,7 +54,7 @@
         image: keycloak-custom
         state: started
         command: >-
-          start 
+          start
           --optimized
           --proxy-headers forwarded
           --hostname={{ keycloak_server_name }}
@@ -89,21 +90,21 @@
       - name: Create realm
         community.general.keycloak_realm:
           auth_client_id: admin-cli
-          auth_keycloak_url: "http://{{ keycloak_server_name }}:8000"
+          auth_keycloak_url: "http://{{ keycloak_server_name }}"
           auth_realm: master
           auth_username: admin
           auth_password: admin11!!
           realm: app-realm
           id: app-realm
           enabled: true
-          attributes: 
+          attributes:
             frontendUrl: "http://{{ keycloak_server_name }}"
           state: present
 
       - name: Create client
         community.general.keycloak_client:
           auth_client_id: admin-cli
-          auth_keycloak_url: "http://{{ keycloak_server_name }}:8000"
+          auth_keycloak_url: "http://{{ keycloak_server_name }}"
           auth_realm: master
           auth_username: admin
           auth_password: admin11!!
@@ -118,7 +119,7 @@
       - name: Create user
         community.general.keycloak_user:
           auth_client_id: admin-cli
-          auth_keycloak_url: "http://{{ keycloak_server_name }}:8000"
+          auth_keycloak_url: "http://{{ keycloak_server_name }}"
           auth_realm: master
           auth_username: admin
           auth_password: admin11!!

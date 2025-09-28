@@ -1,6 +1,5 @@
 - name: Deploy Application
-  hosts: localhost
-  connection: local
+  hosts: all
   pre_tasks:
     - name: Install podman
       ansible.builtin.apt:

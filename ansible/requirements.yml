@@ -1,2 +1,3 @@
 collections:
   - middleware_automation.keycloak
+  - cloud.terraform

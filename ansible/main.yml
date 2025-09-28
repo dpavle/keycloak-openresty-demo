@@ -1,12 +1,12 @@
 - name: Deploy Keycloak + App
-  hosts: localhost
-  connection: local
+  hosts: all
   become: true
   pre_tasks:
     - name: Ensure iptables-persistent is installed
       apt:
         name: iptables-persistent
         state: present
+        update_cache: true
       when: ansible_os_family == "Debian"
 
     - name: Add iptables rule to redirect port 80 to 8000
@@ -31,3 +31,8 @@
       community.general.iptables_state:
         state: saved
         path: /etc/iptables/rules.v4
+
+- ansible.builtin.import_playbook: keycloak.yml
+- ansible.builtin.import_playbook: app.yml
+
+
