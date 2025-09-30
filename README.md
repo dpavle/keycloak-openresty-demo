@@ -4,20 +4,14 @@ Built and tested on Azure Cloud, Ubuntu Server 24.04 image.
 Tools used:
 - **OpenTofu**
 	I'm experimenting with OpenTofu as there seems to be a community shift towards it at the moment, although the HCL here would *probably* also work just fine on Terraform.
-	
 - **Ansible**
-
 - **Podman**
 	First time using Podman, I chose it because I liked it's rootless/daemonless capabilities and standardized approach (meaning possibly easier migration to other container orchestrators in the future, e.g k8s). It also integrates well with Ansible.
-	
 - **Hugo**
 	Generating a decent looking site and simulating a bit more complex app build process. I just thought it would be more interesting than `echo "<a>Hello World!</a>" > index.html`.
-	
 - **Keycloak**
-
 - **OpenResty**
 	Based on Nginx, which I have the most experience with. It's Lua-based extension system provides support for the OAuth authorization required by the project.
-	
 	 *Nginx/OpenResty can sometimes have issues in containerized environments (internal DNS resolution, load balancing between X instances), but for the purposes of this project it's absolutely fine.*  
 
 # Terraform
