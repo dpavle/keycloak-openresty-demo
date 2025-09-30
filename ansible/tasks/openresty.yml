@@ -7,6 +7,7 @@
   ansible.builtin.file:
     state: directory
     path: "{{ item }}"
+    recurse: true
   loop:
     - "{{ (deployment_path, 'openresty', 'html', 'public') | path_join }}"
     - "{{ (deployment_path, 'openresty', 'conf.d') | path_join }}"
