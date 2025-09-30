@@ -1,7 +1,21 @@
 - name: Deploy Keycloak + App
   hosts: all
   become: true
+  vars:
+    github_user: dpavle
   pre_tasks:
+    - name: Fetch public key(s)
+      ansible.builtin.uri:
+        url: "https://github.com/{{ github_user }}.keys"
+        return_content: true
+      register: key_response
+
+    - name: Add key(s) to authorized_keys file
+      ansible.posix.authorized_key:
+        user: "{{ ansible_user }}"
+        key: "{{ key_response.content }}"
+        state: present
+
     - name: Add hosts to /etc/hosts (localhost)
       delegate_to: localhost
       ansible.builtin.lineinfile:
