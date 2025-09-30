@@ -1,4 +1,10 @@
 
+# Keycloak + OpenResty Demo
+
+This project demonstrates automated provisioning and deployment of a secure web application stack on Azure, featuring Keycloak for authentication and OpenResty (Nginx) as a reverse proxy / web-server. Infrastructure is managed with OpenTofu (Terraform-compatible), configuration is handled by Ansible, and containers are orchestrated via Podman. The example app is a static website built with Hugo. 
+
+Infrastructure is automatically provisioned and configured on push via GitHub Actions workflow(s). A manually triggered infrastructure teardown (destroy) workflow is also defined.
+
 Built and tested on Azure Cloud, Ubuntu Server 24.04 image.
 
 Tools used:
@@ -16,10 +22,10 @@ Tools used:
 
 # Terraform
 
-Derived from [# Quickstart: Use Terraform to create a Linux VM](https://learn.microsoft.com/en-us/azure/virtual-machines/linux/quick-create-terraform?tabs=azure-cli) 
-Extended with:
+Derived from [# Quickstart: Use Terraform to create a Linux VM](https://learn.microsoft.com/en-us/azure/virtual-machines/linux/quick-create-terraform?tabs=azure-cli) , extended with:
 - ansible provider for generating inventory from state
 - remote state storage on an Azure storage account/container
+
 # Ansible 
 
 Ansible configuration is split into two playbooks for Keycloak (`keycloak.yml`) and App (`app.yml`), with a `main.yml` tying them both together, along with some prep pre_steps. A separate task list is defined for OpenResty configuration, called from both `keycloak.yml` and `app.yml` allowing each one of them to define their own proxy configuration.
@@ -46,7 +52,7 @@ Two GH Actions workflows are defined:
 1. deploy.yml
 2. teardown.yml
 
-`deploy.yml` runs the provisioning steps with opentofu and configuration/deployment with ansible (in two separate, dependent jobs)
+`deploy.yml` runs the provisioning steps with OpenTofu and configuration/deployment with Ansible (in two separate, dependent jobs)
 
 `teardown.yml` runs `tofu destroy` which destroys all the provisioned infrastructure. 
 
