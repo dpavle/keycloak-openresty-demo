@@ -42,6 +42,7 @@ jobs:
 
   configure-deploy:
     runs-on: ubuntu-latest
+    needs: provision-infra
     defaults:
       run:
         shell: bash
