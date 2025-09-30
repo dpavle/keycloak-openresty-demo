@@ -8,7 +8,7 @@
     state: directory
     path: "{{ item }}"
   loop:
-    - "{{ (deployment_path, 'openresty', 'html') | path_join }}"
+    - "{{ (deployment_path, 'openresty', 'html', 'public') | path_join }}"
     - "{{ (deployment_path, 'openresty', 'conf.d') | path_join }}"
 
 - name: Build OpenResty image
@@ -26,5 +26,5 @@
       - "8443:443"
     volumes:
       - "{{ (deployment_path, 'openresty', 'conf.d') | path_join }}:/etc/nginx/conf.d"
-      - "{{ (deployment_path, 'openresty', 'html') | path_join }}:/usr/local/openresty/nginx/html"
+      - "{{ (deployment_path, 'openresty', 'html', 'public') | path_join }}:/usr/local/openresty/nginx/html"
     net: "{{ podman_net_name }}"
