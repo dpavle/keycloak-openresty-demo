@@ -65,6 +65,11 @@ jobs:
         run: tofu output -raw private_key_data > id_rsa && chmod 600 id_rsa
         working-directory: ./terraform
 
+      - name: Install Requirements
+        id: install-requirements
+        run: ansible-galaxy collection install -r requirements.yml
+        working-directory: ./ansible
+
       - name: Run main.yml Playbook
         id: run-playbook
         run: >-
