@@ -85,6 +85,8 @@ jobs:
           ../ansible/main.yml \
           -e "ansible_ssh_private_key_file=${ID_RSA_PATH}"
         working-directory: ./terraform
+        env:
+          ANSIBLE_HOST_KEY_CHECKING: False
 
       - name: Delete id_rsa
         run: rm -v id_rsa
