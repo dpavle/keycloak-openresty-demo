@@ -37,6 +37,7 @@
     - name: Create Postgres container
       containers.podman.podman_container:
         name: postgres-db
+        restart_policy: always
         image: docker.io/postgres:latest
         env:
           POSTGRES_PASSWORD: test11!!
@@ -51,6 +52,7 @@
     - name: Create Keycloak container
       containers.podman.podman_container:
         name: keycloak
+        restart_policy: always
         image: keycloak-custom
         state: started
         command: >-
@@ -87,6 +89,10 @@
     - name: Keycloak configuration
       delegate_to: localhost
       block:
+      - name: Wait for Keycloak/OpenResty to finish initializing
+        ansible.builtin.wait_for:
+          timeout: 20
+
       - name: Create realm
         community.general.keycloak_realm:
           auth_client_id: admin-cli
@@ -100,6 +106,8 @@
           attributes:
             frontendUrl: "http://{{ keycloak_server_name }}"
           state: present
+        retries: 10
+        delay: 10
 
       - name: Create client
         community.general.keycloak_client:

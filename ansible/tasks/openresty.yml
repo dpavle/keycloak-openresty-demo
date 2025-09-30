@@ -3,10 +3,13 @@
     src: files/openresty
     dest: "{{ deployment_path }}"
 
-- name: Make sure html path exists
+- name: Make sure required paths exist
   ansible.builtin.file:
     state: directory
-    path: "{{ (deployment_path, 'openresty', 'html') | path_join }}"
+    path: "{{ item }}"
+  loop:
+    - "{{ (deployment_path, 'openresty', 'html') | path_join }}"
+    - "{{ (deployment_path, 'openresty', 'conf.d') | path_join }}"
 
 - name: Build OpenResty image
   containers.podman.podman_image:
@@ -16,6 +19,7 @@
 - name: Create OpenResty container
   containers.podman.podman_container:
     name: openresty
+    restart_policy: always
     image: openresty-custom
     ports:
       - "8000:80"

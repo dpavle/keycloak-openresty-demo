@@ -2,15 +2,38 @@
   hosts: all
   become: true
   pre_tasks:
+    - name: Add hosts to /etc/hosts (localhost)
+      delegate_to: localhost
+      ansible.builtin.lineinfile:
+        path: /etc/hosts
+        line: "{{ item }}"
+        owner: root
+        group: root
+        mode: "0644"
+      loop:
+        - "{{ ansible_host }} app.dpavle.local"
+        - "{{ ansible_host }} keycloak.dpavle.local"
+
+    - name: Add hosts to /etc/hosts (remote)
+      ansible.builtin.lineinfile:
+        path: /etc/hosts
+        line: "{{ item }}"
+        owner: root
+        group: root
+        mode: "0644"
+      loop:
+        - "127.0.0.1 app.dpavle.local"
+        - "127.0.0.1 keycloak.dpavle.local"
+
     - name: Ensure iptables-persistent is installed
-      apt:
+      ansible.builtin.apt:
         name: iptables-persistent
         state: present
         update_cache: true
       when: ansible_os_family == "Debian"
 
     - name: Add iptables rule to redirect port 80 to 8000
-      iptables:
+      ansible.builtin.iptables:
         chain: PREROUTING
         table: nat
         protocol: tcp
@@ -19,7 +42,7 @@
         to_ports: 8000
 
     - name: Add iptables rule to redirect port 443 to 8443
-      iptables:
+      ansible.builtin.iptables:
         chain: PREROUTING
         table: nat
         protocol: tcp
