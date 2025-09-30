@@ -61,13 +61,17 @@ jobs:
 
       - name: Fetch Key
         id: fetch-key
-        run: terraform output -raw private_key_data > id_rsa && chmod 600 id_rsa
+        run: tofu output -raw private_key_data > id_rsa && chmod 600 id_rsa
         working-directory: ./terraform
 
       - name: Run main.yml Playbook
         id: run-playbook
         run: >-
           ID_RSA_PATH=$(readlink -f id_rsa) # rsync task had issues with relative key path
+
+          # the ansible plugin looks for a 'terraform' binary in PATH, we lie to it to make it use tofu instead
+          sudo ln -s $(which tofu) /usr/bin/terraform
+
           ansible-playbook
           -i ansible/inventory.yml
           ../ansible/main.yml
