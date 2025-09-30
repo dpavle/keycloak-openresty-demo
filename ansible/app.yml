@@ -1,0 +1,49 @@
+- name: Deploy Application
+  hosts: localhost
+  connection: local
+  pre_tasks:
+    - name: Install podman
+      ansible.builtin.apt:
+        name: podman
+        state: present
+  tasks:
+    - name: Make sure deployment path exists
+      ansible.builtin.file:
+        state: directory
+        path: "{{ deployment_path }}"
+
+    - name: Synchronize deployment files
+      ansible.posix.synchronize:
+        src: ../files/app
+        dest: "{{ deployment_path }}"
+
+    - name: Build demo-site
+      delegate_to: localhost
+      containers.podman.podman_container:
+        name: hugo-builder
+        image: docker.io/klakegg/hugo:ext-alpine
+        volumes:
+          - ../apps/demo-site/:/src
+        ports:
+          - "1313:1313"
+
+    - name: Setup OpenResty
+      ansible.builtin.include_tasks: tasks/openresty.yml
+
+    - name: Synchronize demo-site
+      ansible.builtin.synchronize:
+        src: ../apps/demo-site/public/.
+        dest: "{{ (deployment_path, 'openresty', 'html') | path_join }}"
+
+    - name: Template app.conf.j2 to openresty/conf.d
+      ansible.builtin.template:
+        src: files/app/conf.d/app.conf.j2
+        dest: "{{ (deployment_path, 'openresty', 'conf.d', 'app.conf') | path_join }}"
+
+    - name: Restart OpenResty container
+      containers.podman.podman_container:
+        name: openresty
+        state: started
+        restart: true
+      changed_when: false
+

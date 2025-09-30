@@ -1,0 +1,26 @@
+- name: Synchronize files
+  ansible.posix.synchronize:
+    src: files/openresty
+    dest: "{{ deployment_path }}"
+
+- name: Make sure html path exists
+  ansible.builtin.file:
+    state: directory
+    path: "{{ (deployment_path, 'openresty', 'html') | path_join }}"
+
+- name: Build OpenResty image
+  containers.podman.podman_image:
+    name: openresty-custom
+    path: "{{ (deployment_path, 'openresty') | path_join }}"
+
+- name: Create OpenResty container
+  containers.podman.podman_container:
+    name: openresty
+    image: openresty-custom
+    ports:
+      - "8000:80"
+      - "8443:443"
+    volumes:
+      - "{{ (deployment_path, 'openresty', 'conf.d') | path_join }}:/etc/nginx/conf.d"
+      - "{{ (deployment_path, 'openresty', 'html') | path_join }}:/usr/local/openresty/nginx/html"
+    net: "{{ podman_net_name }}"

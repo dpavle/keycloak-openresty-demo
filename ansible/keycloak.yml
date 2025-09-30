@@ -1,0 +1,136 @@
+- name: Deploy Keycloak
+  hosts: localhost
+  connection: local
+  pre_tasks:
+    - name: Install podman
+      ansible.builtin.apt:
+        name: podman
+        state: present
+  tasks:
+    - name: Make sure deployment path exists
+      ansible.builtin.file:
+        state: directory
+        path: "{{ deployment_path }}"
+
+    - name: Synchronize files
+      ansible.posix.synchronize:
+        src: files/keycloak
+        dest: "{{ deployment_path }}"
+
+    - name: Build Keycloak image
+      containers.podman.podman_image:
+        name: keycloak-custom
+        path: "{{ (deployment_path, 'keycloak') | path_join }}"
+
+    - name: Make sure data directories exist
+      ansible.builtin.file:
+        path: "{{ (deployment_path, 'data', 'postgres-db') | path_join }}"
+        state: directory
+        recurse: true
+
+    - name: Make sure shared network exists
+      containers.podman.podman_network:
+        name: "{{ podman_net_name }}"
+        subnet: "{{ podman_net_subnet }}"
+
+    - name: Create Postgres container
+      containers.podman.podman_container:
+        name: postgres-db
+        image: docker.io/postgres:latest
+        env:
+          POSTGRES_PASSWORD: test11!!
+          POSTGRES_USER: admin
+          POSTGRES_DB: keycloak
+        net: "{{ podman_net_name }}"
+        ports:
+          - "5432:5432"
+        volumes:
+          - "{{ (deployment_path, 'data', 'postgres-db') | path_join }}:/var/lib/postgresql/data"
+
+    - name: Create Keycloak container
+      containers.podman.podman_container:
+        name: keycloak
+        image: keycloak-custom
+        state: started
+        command: >-
+          start 
+          --optimized
+          --proxy-headers forwarded
+          --hostname={{ keycloak_server_name }}
+          --http-enabled=true
+        env:
+          KC_BOOTSTRAP_ADMIN_USERNAME: admin
+          KC_BOOTSTRAP_ADMIN_PASSWORD: admin11!!
+          KC_DB: postgres
+          KC_DB_URL: jdbc:postgresql://postgres-db:5432/keycloak
+          KC_DB_USERNAME: admin
+          KC_DB_PASSWORD: test11!!
+          KC_HOSTNAME: "{{ keycloak_server_name }}"
+        net: "{{ podman_net_name }}"
+
+    - name: Setup OpenResty
+      ansible.builtin.include_tasks: tasks/openresty.yml
+
+    - name: Template keycloak.conf.j2 to openresty/conf.d
+      ansible.builtin.template:
+        src: files/keycloak/conf.d/keycloak.conf.j2
+        dest: "{{ (deployment_path, 'openresty', 'conf.d', 'keycloak.conf') | path_join }}"
+
+    - name: Restart OpenResty container
+      containers.podman.podman_container:
+        name: openresty
+        state: started
+        restart: true
+      changed_when: false
+
+    - name: Keycloak configuration
+      delegate_to: localhost
+      block:
+      - name: Create realm
+        community.general.keycloak_realm:
+          auth_client_id: admin-cli
+          auth_keycloak_url: "http://{{ keycloak_server_name }}:8000"
+          auth_realm: master
+          auth_username: admin
+          auth_password: admin11!!
+          realm: app-realm
+          id: app-realm
+          enabled: true
+          attributes: 
+            frontendUrl: "http://{{ keycloak_server_name }}"
+          state: present
+
+      - name: Create client
+        community.general.keycloak_client:
+          auth_client_id: admin-cli
+          auth_keycloak_url: "http://{{ keycloak_server_name }}:8000"
+          auth_realm: master
+          auth_username: admin
+          auth_password: admin11!!
+          realm: app-realm
+          name: app-client-0
+          client_id: app-client-0
+          redirect_uris:
+            - http://app.dpavle.local/*
+          client_authenticator_type: "client-secret"
+          secret: woosecretwoo
+
+      - name: Create user
+        community.general.keycloak_user:
+          auth_client_id: admin-cli
+          auth_keycloak_url: "http://{{ keycloak_server_name }}:8000"
+          auth_realm: master
+          auth_username: admin
+          auth_password: admin11!!
+          realm: app-realm
+          username: pavle
+          firstName: 'Pavle'
+          lastName: 'Denčić'
+          email: dencic.pavle@gmail.com
+          emailVerified: true
+          enabled: true
+          credentials:
+            - type: password
+              value: pavle11!!
+              temporary: false
+

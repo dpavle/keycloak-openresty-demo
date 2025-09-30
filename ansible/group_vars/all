@@ -1,0 +1,7 @@
+deployment_path: "{{ ansible_env.HOME }}/protected-app"
+podman_net_name: protected-app-net
+podman_net_subnet: 192.168.100.0/24
+podman_net_resolver: 192.168.100.1
+keycloak_server_name: keycloak.dpavle.local
+app_server_name: app.dpavle.local
+

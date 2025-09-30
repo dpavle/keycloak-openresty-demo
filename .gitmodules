@@ -1,0 +1,3 @@
+[submodule "apps/demo-site/themes/devise"]
+	path = apps/demo-site/themes/devise
+	url = https://github.com/austingebauer/devise.git

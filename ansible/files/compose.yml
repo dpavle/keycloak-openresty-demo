@@ -1,0 +1,46 @@
+services:
+  web-server:
+    container_name: web-server-nginx
+    build: openresty/
+    ports:
+      - 8000:80
+      - 8443:443
+    volumes:
+      - ./site/hylastix-test/public:/usr/share/nginx/html
+      - ./openresty/conf.d:/etc/nginx/conf.d
+    depends_on:
+      - keycloak
+    networks: 
+      - app-custom-net
+  keycloak:
+    container_name: keycloak
+    build: keycloak/
+    environment:
+      - KC_BOOTSTRAP_ADMIN_USERNAME=admin
+      - KC_BOOTSTRAP_ADMIN_PASSWORD=admin11!!
+      - KC_DB=postgres
+      - KC_DB_URL=jdbc:postgresql://keycloak-db:5432/hstest
+      - KC_DB_USERNAME=hstest
+      - KC_DB_PASSWORD=test11!!
+      - KC_HOSTNAME=keycloak.dpavle.local
+    command: start --optimized --proxy-headers forwarded --hostname=keycloak.dpavle.local --http-enabled=true
+    networks: 
+      - app-custom-net
+  keycloak-db:
+    container_name: keycloak-db
+    image: docker.io/postgres:latest
+    environment:
+      - POSTGRES_PASSWORD=test11!!
+      - POSTGRES_USER=hstest
+      - POSTGRES_DB=hstest
+    ports:
+      - 5432:5432
+    volumes:
+      pgdata:/var/lib/postgresql/data
+    networks: 
+      - app-custom-net
+networks:
+  app-custom-net:
+    external: true
+volumes:
+  pgdata:
