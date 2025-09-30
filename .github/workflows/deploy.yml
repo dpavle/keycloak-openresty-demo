@@ -1,4 +1,5 @@
 name: Provision infrastructure and deploy application
+on: push
 jobs:
   provision-infra:
     runs-on: ubuntu-latest
