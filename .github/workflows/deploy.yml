@@ -1,5 +1,13 @@
 name: Provision infrastructure and deploy application
 on: push
+
+env:
+  ARM_ACCESS_KEY: ${{ secrets.ARM_ACCESS_KEY }}
+  ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
+  ARM_CLIENT_ID: ${{ vars.ARM_CLIENT_ID }}
+  ARM_SUBSCRIPTION_ID: ${{ vars.ARM_SUBSCRIPTION_ID }}
+  ARM_TENANT_ID: ${{ vars.ARM_TENANT_ID }}
+
 jobs:
   provision-infra:
     runs-on: ubuntu-latest
@@ -19,6 +27,7 @@ jobs:
       - name: OpenTofu Init
         id: init
         run: tofu init
+
 
       - name: OpenTofu Validate
         id: validate
