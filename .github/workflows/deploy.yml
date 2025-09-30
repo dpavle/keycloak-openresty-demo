@@ -28,7 +28,6 @@ jobs:
         id: init
         run: tofu init
 
-
       - name: OpenTofu Validate
         id: validate
         run: tofu validate -no-color
@@ -40,3 +39,41 @@ jobs:
       - name: OpenTofu Apply
         id: apply
         run: tofu apply -auto-approve -input=false
+
+  configure-deploy:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+      - uses: opentofu/setup-opentofu@v1
+
+      - name: Install Ansible
+        id: install-ansible
+        run: |
+          sudo apt update && sudo apt install -y ansible
+
+      - name: OpenTofu Init
+        id: init
+        run: tofu init
+        working-directory: ./terraform
+
+      - name: Fetch Key
+        id: fetch-key
+        run: terraform output -raw private_key_data > id_rsa && chmod 600 id_rsa
+        working-directory: ./terraform
+
+      - name: Run main.yml Playbook
+        id: run-playbook
+        run: >-
+          ID_RSA_PATH=$(readlink -f id_rsa) # rsync task had issues with relative key path
+          ansible-playbook
+          -i ansible/inventory.yml
+          ../ansible/main.yml
+          -e "ansible_ssh_private_key_file=${ID_RSA_PATH}"
+        working-directory: ./terraform
+
+      - name: Delete id_rsa
+        run: rm -v id_rsa
+        working-directory: ./terraform

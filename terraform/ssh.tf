@@ -22,8 +22,7 @@ resource "azapi_resource" "ssh_public_key" {
 output "public_key_data" {
   value = azapi_resource_action.ssh_public_key_gen.output.publicKey
 }
-resource "local_file" "private_key_data" {
-  content = azapi_resource_action.ssh_public_key_gen.output.privateKey
-  filename = "id_rsa"
-  file_permission = "0600"
+output "private_key_data" {
+  value = azapi_resource_action.ssh_public_key_gen.output.privateKey
+  sensitive = true
 }
