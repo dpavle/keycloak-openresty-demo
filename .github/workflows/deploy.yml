@@ -48,6 +48,8 @@ jobs:
         shell: bash
     steps:
       - uses: actions/checkout@v4
+        with:
+          submodules: recursive
       - uses: opentofu/setup-opentofu@v1
 
       - name: Install Ansible
